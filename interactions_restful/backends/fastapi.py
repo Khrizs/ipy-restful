@@ -1,5 +1,5 @@
 from contextlib import asynccontextmanager
-from typing import AsyncIterator, Callable, Coroutine
+from typing import Callable, Coroutine
 
 from fastapi import APIRouter, FastAPI
 from interactions import Client
