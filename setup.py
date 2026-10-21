@@ -9,7 +9,7 @@ with open("pyproject.toml", "rb") as f:
 
 extras_require = {
     "quart": ["quart>=0.15.0"],
-    "fastapi": ["fastapi>=0.92.0"],
+    "fastapi": ["fastapi>=0.159.1"],
     "uvicorn": ["uvicorn>=0.15.0"],
     "hypercorn": ["hypercorn>=0.14.0"],
     "daphne": ["daphne>=4.0.0"],

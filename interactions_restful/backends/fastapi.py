@@ -1,4 +1,5 @@
-from typing import Callable, Coroutine
+from contextlib import asynccontextmanager
+from typing import AsyncIterator, Callable, Coroutine
 
 from fastapi import APIRouter, FastAPI
 from interactions import Client
@@ -24,8 +25,16 @@ class FastAPIHandler(BaseAPIHandler):
 
     def __init__(self, bot: Client, app: FastAPI):
         super().__init__(bot, app)
-        self.app.add_event_handler("startup", self.startup)
-        self.app.add_event_handler("shutdown", self.shutdown)
+        existing_lifespan = self.app.router.lifespan_context
+
+        @asynccontextmanager
+        async def lifespan(app: FastAPI):
+            async with existing_lifespan(app):
+                await self.startup()
+                yield
+                await self.shutdown()
+
+        self.app.router.lifespan_context = lifespan
 
     @staticmethod
     def create_router(**kwargs):
