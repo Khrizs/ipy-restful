@@ -42,14 +42,29 @@ class FastAPIHandler(BaseAPIHandler):
 
     def add_router(self, router: FastAPIRouterWrapper):
         self.app.include_router(router.api_router)
+        
+        for r in self.app.router.routes:
+            print(type(r), vars(r))
 
     def remove_router(self, router: FastAPIRouterWrapper):
-        paths_to_check = frozenset(
-            f"{router.api_router.prefix}{r.path}" for r in router.api_router.routes
-        )
-        for i, r in enumerate(self.app.router.routes):
-            if r.path in paths_to_check:  # type: ignore
-                del self.app.router.routes[i]
+        api_router = router.api_router
+        routes = self.app.router.routes
+
+        def points_to_router(r) -> bool:
+            # in fastapi 0.137+: router.routes is no longer a plain list of APIRoute objects, it can contain these intermediate objects that can contain additional routers, forming a tree.
+            if r is api_router:
+                return True
+            return any(v is api_router for v in getattr(r, "__dict__", {}).values())
+
+        routes[:] = [r for r in routes if not points_to_router(r)]
+
+
+        # paths_to_check = frozenset(
+        #     f"{router.api_router.prefix}{r.path}" for r in router.api_router.routes
+        # )
+        # for i, r in enumerate(self.app.router.routes):
+        #     if r.path in paths_to_check:  # type: ignore
+        #         del self.app.router.routes[i]
 
     def add_endpoint_method(
         self, coro: Callable[..., Coroutine], endpoint: str, method: str, **kwargs
